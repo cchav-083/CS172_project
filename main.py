@@ -3,14 +3,47 @@ import json
 import math
 import os
 
+#feed one dictionary
+#DOESNT work yet, ignore
+def feed_json(dict):
+    #json exists
+    with open("sample.json", "r") as feedsjson:
+        feeds = json.load(feedsjson)
 
-def dict_to_json(dict):
+    
+    feeds.append(json.dumps(dict))
+    with open("sample.json", "w") as f:
+
+
+
+    #feeds.append(dict)
+    print("feed: ", feeds)
+
+   # with open("sample.json", mode='w') as f:
+    #    f.write(json.dumps(feeds, indent=2))
+
+    pass
+
+#needs an array of dictionaries
+def dict_to_json(dicts):
+    full_text = ""
 
     #print(dict)
-
     with open("sample.json", "w") as json_file: 
         
-        json.dump(dict, json_file)
+        json_file.write('[')
+        for dict in dicts:
+            text = json.dumps(dict)
+            text+= ',\n'
+            full_text+=text
+            
+
+        full_text =  full_text[:-2]
+        json_file.write(full_text)
+
+
+        json_file.write(']')
+
 
 
 reddit = praw.Reddit(
@@ -21,8 +54,9 @@ reddit = praw.Reddit(
 
 subreddit = reddit.subreddit("python")
 
-top_posts = subreddit.top(limit=1)
+top_posts = subreddit.top(limit=2)
 new_posts = subreddit.new(limit=10)
+
 
 post_data = {
     "title": None,
@@ -46,7 +80,7 @@ post_data = {
 
 
 }
-
+dicts = []
 for post in top_posts:
     post_dat = {}
     #print("Title - ", post.title)
@@ -82,11 +116,15 @@ for post in top_posts:
     #if not os.path.isfile("test.json"):
     #    print('exists')
 
-    sample_dict = {
-        "title":"hi world"
-    }
     print(post_dat)
-    dict_to_json(post_dat)
+    dicts.append(post_dat)
+   # dict_to_json(post_dat)
+    #feed_json(post_dat)
+    #feed_json(post_dat)
+
+dict_to_json(dicts)
 
 
+#def main():
+#    pass
 
