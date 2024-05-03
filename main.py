@@ -95,16 +95,20 @@ def main():
     )
 
     #GOAL : get 100,000 posts.
-    subreddits = ["python",]
-    subreddit = reddit.subreddit("python")
+    subreddits = ["python"]
 
-    top_posts = subreddit.top(limit=1000)
-    new_posts = subreddit.new(limit=3)
+    for sub in subreddits:
+        subreddit = reddit.subreddit(sub)
+
+        top_posts = subreddit.top(limit=1000)
+        new_posts = subreddit.new(limit=1000)
 
     
-    posts = extract_posts(top_posts)
+        posts = extract_posts(top_posts)
+        posts+= extract_posts(new_posts)
+        dict_to_json(posts)
+    
 
-    dict_to_json(posts)
   
   
 # Using the special variable  
