@@ -10,19 +10,18 @@ def feed_json(dict):
     with open("sample.json", "r") as feedsjson:
         feeds = json.load(feedsjson)
 
-    
-    feeds.append(json.dumps(dict))
-    with open("sample.json", "w") as f:
+    print(feeds)
 
+
+    #feeds.append(json.dumps(dict))
+    #with open("sample.json", "w") as f:
+    #    pass
 
 
     #feeds.append(dict)
-    print("feed: ", feeds)
-
    # with open("sample.json", mode='w') as f:
     #    f.write(json.dumps(feeds, indent=2))
 
-    pass
 
 #needs an array of dictionaries
 def dict_to_json(dicts):
@@ -45,86 +44,74 @@ def dict_to_json(dicts):
         json_file.write(']')
 
 
+#returns array of dictionaries
+def extract_posts(posts):
+    dicts = []
+    for post in posts:
+        if post.over_18:
+            print('over 18, skipping')
+            continue
 
-reddit = praw.Reddit(
-    client_id="URr1kFlz0I14JXM5fWzxdA",
-    client_secret="Ie89Czek_-6enr0KekkLcI_KUEmtCQ",
-    user_agent = "cs172 crawler"
-)
+        post_dat = {}
 
-subreddit = reddit.subreddit("python")
+        post_dat["title"] = post.title
+        post_dat["ID"] = post.id
 
-top_posts = subreddit.top(limit=2)
-new_posts = subreddit.new(limit=10)
+        if post.author is not None:
+            post_dat["author"] = post.author.name
+        else:
+            post_dat["author"] = "deleted"
 
+        post_dat['url'] = post.url
 
-post_data = {
-    "title": None,
-    "body":[
-        {"content":None,
-         "urls":[],
-         "imgs":[]
-        }
-    ],
-    "op":None,
-    "id":None,
-    "upvotes":None,
-    "downvotes":None,
-    "url":None,
-    "comments": [
-        {
-            "username":None,
-            "comment":None
-        }
-    ]
+        post_dat['score'] = post.score
+        post_dat['ratio'] = post.upvote_ratio
+        post_dat["num_comments"] = post.num_comments
+        post_dat["post_created"] = post.created_utc
 
+        post_dat["comments"] = []
 
-}
-dicts = []
-for post in top_posts:
-    post_dat = {}
-    #print("Title - ", post.title)
-    post_dat["title"] = post.title
+        post.comments.replace_more(limit=None)
+        for top_level_comment in post.comments.list():
+            post_dat["comments"].append(top_level_comment.body)
+            #print(top_level_comment.body)
 
-   # print("ID - ", post.id)
-    post_dat["ID"] = post.id
+        post_dat["body"] = post.selftext
+  
+        dicts.append(post_dat)
+
+    return dicts
 
 
 
-   # print("Author - ", post.author)
-    post_dat["author"] = post.author.name
-
-   # print("URL - ", post.url)
-    post_dat['url'] = post.url
-
-   # print("Score - ", post.score)
-    post_dat['score'] = post.score
-
-   # print("Comment count - ",post.num_comments)
-    post_dat["num_comments"] = post.num_comments
-
-    #print("Created - ", post.created_utc)
-    post_dat["post_created"] = post.created_utc
 
 
-    #post_dat["body"] = print(post.selftext)
+def main(): 
 
-    #print("\n")
+    reddit = praw.Reddit(
+        client_id="URr1kFlz0I14JXM5fWzxdA",
+        client_secret="Ie89Czek_-6enr0KekkLcI_KUEmtCQ",
+        user_agent = "cs172 crawler"
+    )
 
-    #print(post_dat)
+    #GOAL : get 100,000 posts.
+    subreddits = ["python"]
 
-    #if not os.path.isfile("test.json"):
-    #    print('exists')
+    for sub in subreddits:
+        subreddit = reddit.subreddit(sub)
 
-    print(post_dat)
-    dicts.append(post_dat)
-   # dict_to_json(post_dat)
-    #feed_json(post_dat)
-    #feed_json(post_dat)
+        top_posts = subreddit.top(limit=1000)
+        new_posts = subreddit.new(limit=1000)
 
-dict_to_json(dicts)
+    
+        posts = extract_posts(top_posts)
+        posts+= extract_posts(new_posts)
+        dict_to_json(posts)
+    
 
-
-#def main():
-#    pass
-
+  
+  
+# Using the special variable  
+# __name__ 
+if __name__=="__main__": 
+    main()
