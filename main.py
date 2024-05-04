@@ -64,7 +64,7 @@ def scrape_urls(urls : list):
 def feed_json(dict, subreddit_name):
     #json exists
     feeds = None
-    with open((subreddit_name+ ".json"), "r") as feedsjson:
+    with open(("/data/"+subreddit_name+ ".json"), "r") as feedsjson:
         feeds = json.load(feedsjson)
 
     print(feeds)
@@ -75,7 +75,12 @@ def feed_json(dict, subreddit_name):
     feeds = feeds[:-2]
     feeds+= ']'
 
-    with open((subreddit_name+ ".json"), "w") as json_file:
+    filename = subreddit_name + '.json'
+    if not os.path.exists('data'):
+        os.makedirs('data')
+        print('hello')
+
+    with open(os.path.join('data', filename), "w") as json_file:
         json_file.write(feeds)
 
 #needs an array of dictionaries
@@ -83,7 +88,8 @@ def create_json(dicts, subreddit_name):
     full_text = ""
 
     #print(dict)
-    with open(subreddit_name+".json", "w") as json_file: 
+    filename = subreddit_name + '.json'
+    with open(os.path.join('data', filename), "w") as json_file:
         
         json_file.write('[')
         for dict in dicts:
@@ -144,19 +150,22 @@ def extract_posts(posts):
 
                         
                 #FOR COMMENTS
-                #post.comments.replace_more(limit=None)
+                print('starting comments..')
+                post.comments.replace_more(limit=None)
                 #print('starting loop')
-                #for top_level_comment in post.comments.list():
-                #    post_dat["comments"].append(top_level_comment.body)
-                   
+                print('comments recieved...')
+                for top_level_comment in post.comments.list():
+                    post_dat["comments"].append(top_level_comment.body)
+                print('comments collected')
                 
                 dicts.append(post_dat)
-                counter+=100
+                counter+=100 #this is so that the while loop breaks.
                 post_counter+=1
                     #time.sleep(1)
             except prawcore.exceptions.TooManyRequests as e:
                 time.sleep(60)
                 counter+=1
+                print('too many requests! waiting 60 seconds..')
         
         print(post_counter)
         #time.sleep(1)
