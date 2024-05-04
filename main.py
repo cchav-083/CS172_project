@@ -3,11 +3,12 @@ import json
 import math
 import os
 import userinfo
-
+import time
 
 import requests
 from bs4 import BeautifulSoup
 import re
+import prawcore
 
 from requests.exceptions import ConnectionError
 
@@ -17,12 +18,8 @@ from requests.exceptions import ConnectionError
 def crawl_urls(text : str):
 
     urls = re.findall("(?P<url>https?://[^\s]+)", text)
-    urls.append('https://op.Gg))')
     return urls
     pass
-#V now send 
-#returns a array of external links
-#external_links = [ {"link": None, "title": None}]
 
 def scrape_urls(urls : list):
     external_links = []
@@ -98,51 +95,63 @@ def create_json(dicts, subreddit_name):
 def extract_posts(posts):
     dicts = []
     for post in posts:
+        counter = 0
         if post.over_18:
             print('over 18, skipping')
             continue
+        while (counter < 100):
+            try:
+                            
+                
 
-        post_dat = {}
+                post_dat = {}
 
-        post_dat["title"] = post.title
-        post_dat["ID"] = post.id
+                post_dat["title"] = post.title
+                post_dat["ID"] = post.id
 
-        if post.author is not None:
-            post_dat["author"] = post.author.name
-        else:
-            post_dat["author"] = "deleted"
+                if post.author is not None:
+                    post_dat["author"] = post.author.name
+                else:
+                    post_dat["author"] = "deleted"
 
-        post_dat['url'] = post.url
-        post_dat['permalink'] = post.permalink
+                post_dat['url'] = post.url
+                post_dat['permalink'] = post.permalink
 
-        post_dat['score'] = post.score
-        post_dat['ratio'] = post.upvote_ratio
-        post_dat["num_comments"] = post.num_comments
-        post_dat["post_created"] = post.created_utc
+                post_dat['score'] = post.score
+                post_dat['ratio'] = post.upvote_ratio
+                post_dat["num_comments"] = post.num_comments
+                post_dat["post_created"] = post.created_utc
 
-        
+                        
 
-        post_dat["body"] = post.selftext
+                post_dat["body"] = post.selftext
 
-        urls = crawl_urls(post.selftext)
-        print('crawling done')
+                urls = crawl_urls(post.selftext)
+                print('crawling done')
 
-        post_dat["external_links"] = scrape_urls(urls)
+                post_dat["external_links"] = scrape_urls(urls)
 
-        print('soup made')
+                print('soup made')
 
-        post_dat["comments"] = []
-        post.comments.replace_more(limit=None)
-        print('starting loop')
-        for top_level_comment in post.comments.list():
-            post_dat["comments"].append(top_level_comment.body)
-            print(top_level_comment.body)
+                post_dat["comments"] = []
 
+                        
+                #FOR COMMENTS
+                # post.comments.replace_more(limit=None)
+                #print('starting loop')
+                #for top_level_comment in post.comments.list():
+                    #post_dat["comments"].append(top_level_comment.body)
+                    #print(top_level_comment.body)
 
-        print('done comments')
-  
-        dicts.append(post_dat)
-
+                
+                dicts.append(post_dat)
+                counter+=100
+                    #time.sleep(1)
+            except prawcore.exceptions.TooManyRequests as e:
+                time.sleep(60)
+                counter+=1
+                
+        time.sleep(1)
     return dicts
 
 
@@ -150,6 +159,11 @@ def extract_posts(posts):
 
 
 def main(): 
+
+
+    subreddits = ["pics", "AskReddit"]
+
+
     print("starting")
     print(userinfo.useragent)
 
@@ -159,34 +173,19 @@ def main():
         client_secret="Ie89Czek_-6enr0KekkLcI_KUEmtCQ",
         user_agent = userinfo.useragent
     )
-    #print(reddit.user_agent)
-    #GOAL : get 100,000 posts.
-    subreddits = ["python", "python"]
-   # valo_id = "1ccwswy"
-   # s_id = "1ccayuz"
-    #subm = reddit.submission(id=valo_id)
-    #print(subm.selftext)
-    #print(subm.url)
-    #print(subm.permalink)
-   # scrape_urls(subm.selftext)
 
+    
 
-    #string_ex = "he one interested in the build &#x200B; [MeatRocket8#9272 - Summoner Stats - League of Legends (op.gg)](https://www.op.gg/summoners/euw/MeatRocket8-9272) &#&#x200B; here's my [op.Gg](https://op.Gg) for the one interested in the build &#x200B; [MeatRocket8#9272 - Summoner Stats - League of Legends (op.gg)](https://www.op.gg/summoners/euw/MeatRocket8-9272) &#x200B;"
-
-    #urls = crawl_urls(string_)
-   # urls = crawl_urls(subm.selftext)
-    #scrape_urls(urls)
-    #return
 
     for sub in subreddits:
         print('crawling ', sub)
         subreddit = reddit.subreddit(sub)
 
 
-        top_posts = subreddit.top(limit=1)
-        new_posts = subreddit.new(limit=1)
-        hot_posts = subreddit.hot(limit=1)
-        contro_posts = subreddit.controversial(limit=1)
+        top_posts = subreddit.top(limit=1000)
+        new_posts = subreddit.new(limit=1000)
+        hot_posts = subreddit.hot(limit=1000)
+       # contro_posts = subreddit.controversial(limit=1)
 
         posts = []
         posts +=extract_posts(hot_posts)
@@ -198,7 +197,7 @@ def main():
 
         
        # create_json(posts, sub)
-    print('yes sir')
+   
     
 
   
