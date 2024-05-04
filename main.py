@@ -12,8 +12,8 @@ import prawcore
 
 from requests.exceptions import ConnectionError
 
-
-
+#byte_counter = 0
+#file_count = 0
 #Looks for external links under reddit posts. 
 #Returns a list of strings : urls
 def crawl_urls(text : str):
@@ -89,6 +89,7 @@ def create_json(dicts, subreddit_name):
 
     #print(dict)
     filename = subreddit_name + '.json'
+    
     with open(os.path.join('data', filename), "w") as json_file:
         
         json_file.write('[')
@@ -106,7 +107,7 @@ def create_json(dicts, subreddit_name):
 
 
 #returns array of dictionaries
-def extract_posts(posts):
+def extract_posts(posts, sub):
     dicts = []
     post_counter = 0
     for post in posts:
@@ -134,7 +135,7 @@ def extract_posts(posts):
                 post_dat['ratio'] = post.upvote_ratio
                 post_dat["num_comments"] = post.num_comments
                 post_dat["post_created"] = post.created_utc
-
+                post_dat["subreddit"] = sub
                         
 
                 post_dat["body"] = post.selftext
@@ -161,6 +162,10 @@ def extract_posts(posts):
                 dicts.append(post_dat)
                 counter+=100 #this is so that the while loop breaks.
                 post_counter+=1
+
+
+                #check byte_count. if over 10million, create_json(dicts), and reset.
+
                     #time.sleep(1)
             except prawcore.exceptions.TooManyRequests as e:
                 time.sleep(60)
@@ -178,8 +183,8 @@ def extract_posts(posts):
 def main(): 
 
         #change this!!
-    subreddits = ["pics", "AskReddit"]
-
+    #subreddits = ["pics", "AskReddit"]
+    subreddits = ['NintendoSwitch', 'mario', 'zelda', 'truezelda', 'patientgamers']
 
     print("starting")
     print(userinfo.useragent)
@@ -205,9 +210,9 @@ def main():
        # contro_posts = subreddit.controversial(limit=1)
 
         posts = []
-        posts +=extract_posts(hot_posts)
-        posts += extract_posts(top_posts)
-        posts+= extract_posts(new_posts)
+        posts +=extract_posts(hot_posts, sub)
+        posts += extract_posts(top_posts, sub)
+        posts+= extract_posts(new_posts, sub)
         
 
         create_json(posts, sub)
