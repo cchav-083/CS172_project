@@ -54,7 +54,20 @@ def scrape_urls(urls : list):
 
         except ConnectionError as e:
             req = "no response"
+            print('connection error!')
+        except requests.exceptions.TooManyRedirects:
+            req = 'no response1'
+            print('too many redirects!')
+        except requests.exceptions.Timeout:
+            req = 'no resp 2'
+            print('timeout!')
+
+        except requests.exceptions.RequestException as e: # the rest
+            req = 'no response3'
+            print('error handling')
+
         
+
     return external_links
        
 
@@ -184,7 +197,7 @@ def main():
 
         #change this!!
     #subreddits = ["pics", "AskReddit"]
-    subreddits = ['NintendoSwitch', 'mario', 'zelda', 'truezelda', 'patientgamers']
+    subreddits = ['NintendoSwitch', 'nintendo', 'mario', 'zelda', 'truezelda', 'patientgamers', 'cozygamers', 'pikmin', 'earthbound', 'leagueoflegends']
 
     print("starting")
     print(userinfo.useragent)
@@ -204,14 +217,15 @@ def main():
         subreddit = reddit.subreddit(sub)
 
 
-        top_posts = subreddit.top(limit=1000)
-        new_posts = subreddit.new(limit=1000)
+        top_posts = subreddit.top(time_filter="month", limit=1000)
         hot_posts = subreddit.hot(limit=1000)
+        new_posts = subreddit.new(limit=1000)
+        
        # contro_posts = subreddit.controversial(limit=1)
 
         posts = []
-        posts +=extract_posts(hot_posts, sub)
-        posts += extract_posts(top_posts, sub)
+        posts +=extract_posts(top_posts, sub)
+        posts += extract_posts(hot_posts, sub)
         posts+= extract_posts(new_posts, sub)
         
 
