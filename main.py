@@ -14,13 +14,17 @@ from requests.exceptions import ConnectionError
 
 
 
-#crawl 
+#Looks for external links under reddit posts. 
+#Returns a list of strings : urls
 def crawl_urls(text : str):
 
     urls = re.findall("(?P<url>https?://[^\s]+)", text)
     return urls
     pass
 
+#Uses the list of urls and requests them. Grabs their HTML and turns into a dictionary.
+#do this for all urls in the list
+#returns a list of dictionaries 
 def scrape_urls(urls : list):
     external_links = []
     for url in urls:
@@ -38,9 +42,11 @@ def scrape_urls(urls : list):
 
 
             ext_link = {}
+            if soup.title is not None:
+                ext_link["title"] = soup.title.string
 
-            ext_link["title"] = soup.title.string
-            ext_link["description"] = soup.get_text() #useful for part b? 
+            if soup.get_text() is not None: 
+                ext_link["description"] = soup.get_text() #useful for part b? 
             ext_link["url"] = url
 
             external_links.append(ext_link)
@@ -51,8 +57,10 @@ def scrape_urls(urls : list):
         
     return external_links
        
-#feed one dictionary
-#DOESNT work yet, ignore
+
+####
+#ignore this, i never use this function.
+###
 def feed_json(dict, subreddit_name):
     #json exists
     feeds = None
@@ -94,16 +102,15 @@ def create_json(dicts, subreddit_name):
 #returns array of dictionaries
 def extract_posts(posts):
     dicts = []
+    post_counter = 0
     for post in posts:
+        
         counter = 0
         if post.over_18:
             print('over 18, skipping')
             continue
         while (counter < 100):
             try:
-                            
-                
-
                 post_dat = {}
 
                 post_dat["title"] = post.title
@@ -127,31 +134,32 @@ def extract_posts(posts):
                 post_dat["body"] = post.selftext
 
                 urls = crawl_urls(post.selftext)
-                print('crawling done')
+                #print('crawling done')
 
                 post_dat["external_links"] = scrape_urls(urls)
 
-                print('soup made')
+                #print('soup made')
 
                 post_dat["comments"] = []
 
                         
                 #FOR COMMENTS
-                # post.comments.replace_more(limit=None)
+                #post.comments.replace_more(limit=None)
                 #print('starting loop')
                 #for top_level_comment in post.comments.list():
-                    #post_dat["comments"].append(top_level_comment.body)
-                    #print(top_level_comment.body)
-
+                #    post_dat["comments"].append(top_level_comment.body)
+                   
                 
                 dicts.append(post_dat)
                 counter+=100
+                post_counter+=1
                     #time.sleep(1)
             except prawcore.exceptions.TooManyRequests as e:
                 time.sleep(60)
                 counter+=1
-                
-        time.sleep(1)
+        
+        print(post_counter)
+        #time.sleep(1)
     return dicts
 
 
@@ -160,7 +168,7 @@ def extract_posts(posts):
 
 def main(): 
 
-
+        #change this!!
     subreddits = ["pics", "AskReddit"]
 
 
